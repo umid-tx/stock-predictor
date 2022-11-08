@@ -8,10 +8,11 @@ from prophet import Prophet
 
 import argparse
 
-BASE_DIR = Path(__file__).resolve(strict=True).parent
+BASE_DIR = Path(__file__).resolve(strict=True).parent # which shows the root directory of your project
 TODAY = datetime.date.today()
 
-
+# Download historical stock data with yfinance, create a new Prophet model, 
+# fit the model to the stock data, and then serialize and save the model as a Joblib file
 def train(ticker="MSFT"):
     data = yf.download(ticker, "2020-01-01", TODAY.strftime("%Y-%m-%d"))
 
@@ -27,7 +28,8 @@ def train(ticker="MSFT"):
 
     joblib.dump(model, Path(BASE_DIR).joinpath(f"{ticker}.joblib"))
 
-
+# Load and deserialize the saved model, generate a new forecast, 
+# create images of the forecast plot and forecast components, and return the days included in the forecast as a list of dicts.
 def predict(ticker="MSFT", days=7):
     model_file = Path(BASE_DIR).joinpath(f"{ticker}.joblib")
     if not model_file.exists():
@@ -47,6 +49,7 @@ def predict(ticker="MSFT", days=7):
 
     return forecast.tail(days).to_dict("records")
 
+# Take the list of dicts from predict and output a dict of dates and forecasted values; e.g., {"07/02/2020": 200}).
 def convert(prediction_list):
     output = {}
     for data in prediction_list:
@@ -54,7 +57,7 @@ def convert(prediction_list):
         output[date] = data["trend"]
     return output
 
-
+# This block of code allows you to execute the model from the command line, with two arguments, a valid stock ticker and the number of days to predict.
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Predict')
     parser.add_argument('--ticker', type=str, default='MSFT', help='Stock Ticker')
